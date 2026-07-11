@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projects — CloudScope by Raghunath Pradhan</title>
+  <meta name="description" content="Real-world DevOps projects by Raghunath Pradhan — EKS clusters, Terraform infrastructure, CI/CD pipelines, and cloud-native tooling with GitHub source.">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="../index.html" class="nav-brand">CloudScope</a>
+      <div class="nav-links">
+        <a href="../index.html">Home</a>
+        <a href="blog.html">Blog</a>
+        <a href="interview.html">Interview Prep</a>
+        <a href="projects.html" class="active">Projects</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <button class="hamburger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Page Header -->
+  <div class="page-hero">
+    <div class="container">
+      <span class="hero-badge">Real-World Engineering</span>
+      <h1 class="page-hero-title">Projects</h1>
+      <p class="page-hero-desc">
+        Production-grade DevOps projects — infrastructure as code, CI/CD pipelines,
+        and cloud-native patterns built and deployed in real environments.
+      </p>
+      <div class="page-stats">
+        <div class="stat-item"><span class="stat-num">6</span><span class="stat-label">Projects</span></div>
+        <div class="stat-item"><span class="stat-num">AWS</span><span class="stat-label">Cloud</span></div>
+        <div class="stat-item"><span class="stat-num">IaC</span><span class="stat-label">Approach</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Projects Grid -->
+  <section class="section">
+    <div class="container">
+
+      <!-- Filter chips -->
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="kubernetes">Kubernetes</button>
+        <button class="filter-btn" data-filter="terraform">Terraform</button>
+        <button class="filter-btn" data-filter="cicd">CI/CD</button>
+        <button class="filter-btn" data-filter="aws">AWS</button>
+        <button class="filter-btn" data-filter="monitoring">Monitoring</button>
+      </div>
+
+      <div class="projects-grid" id="projectsGrid">
+
+        <!-- Project 1 -->
+        <div class="project-card" data-category="kubernetes terraform aws">
+          <div class="project-card-top">
+            <div class="project-stack">
+              <span class="badge k8s">☸ Kubernetes</span>
+              <span class="badge terraform">🏗 Terraform</span>
+              <span class="badge aws">☁ AWS</span>
+            </div>
+            <span class="project-status status-active">Active</span>
+          </div>
+          <h2 class="project-title">Production EKS Cluster on AWS</h2>
+          <p class="project-desc">
+            A fully automated, production-grade Amazon EKS cluster provisioned with Terraform.
+            Includes multi-AZ node groups, managed add-ons (CoreDNS, kube-proxy, VPC CNI),
+            IRSA-based pod IAM roles, cluster autoscaler, and ALB Ingress Controller.
+          </p>
+          <ul class="project-highlights">
+            <li><strong>Infra:</strong> VPC with public/private subnets across 3 AZs, NAT Gateway, bastion host</li>
+            <li><strong>EKS:</strong> Managed node groups with launch templates, taints, and spot instance support</li>
+            <li><strong>IAM:</strong> IRSA (IAM Roles for Service Accounts) for fine-grained pod permissions</li>
+            <li><strong>Networking:</strong> AWS ALB Ingress with IngressGroup for shared load balancer</li>
+            <li><strong>Autoscaling:</strong> Cluster Autoscaler + HPA configured for production workloads</li>
+          </ul>
+          <div class="project-footer">
+            <a href="https://github.com/raghunathpradhan" target="_blank" rel="noopener" class="project-github-link">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+              View on GitHub
+            </a>
+          </div>
+        </div>
+
+        <!-- Project 2 -->
+        <div class="project-card" data-category="cicd kubernetes">
+          <div class="project-card-top">
+            <div class="project-stack">
+              <span class="badge interview">⚙ Jenkins</span>
+              <span class="badge k8s">☸ Kubernetes</span>
+              <span class="badge docker">🐳 Docker</span>
+            </div>
+            <span class="project-status status-active">Active</span>
+          </div>
+          <h2 class="project-title">Jenkins CI/CD Pipeline for Microservices</h2>
+          <p class="project-desc">
+            End-to-end CI/CD pipeline using Jenkins for a microservices architecture deployed on Kubernetes.
+            Implements GitOps principles with Argo CD, automated Docker image builds, semantic versioning,
+            and environment promotion from dev → staging → prod.
+          </p>
+          <ul class="project-highlights">
+            <li><strong>CI:</strong> Jenkins multibranch pipeline — build, test, SAST scan, Docker image push</li>
+            <li><strong>Registry:</strong> ECR with lifecycle policies and vulnerability scanning via Inspector</li>
+            <li><strong>CD:</strong> Argo CD watches Helm chart repo; auto-sync on image tag update</li>
+            <li><strong>Strategy:</strong> Rolling updates with preStop hooks and readiness probes for zero-downtime</li>
+            <li><strong>Secrets:</strong> External Secrets Operator pulling from AWS Secrets Manager</li>
+          </ul>
+          <div class="project-footer">
+            <a href="https://github.com/raghunathpradhan" target="_blank" rel="noopener" class="project-github-link">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+              View on GitHub
+            </a>
+          </div>
+        </div>
+
+        <!-- Project 3 -->
+        <div class="project-card" data-category="terraform aws">
+          <div class="project-card-top">
+            <div class="project-stack">
+              <span class="badge terraform">🏗 Terraform</span>
+              <span class="badge aws">☁ AWS</span>
+            </div>
+            <span class="project-status status-active">Active</span>
+          </div>
+          <h2 class="project-title">Terraform AWS Landing Zone</h2>
+          <p class="project-desc">
+            Multi-account AWS landing zone using Terraform modules. Sets up AWS Organizations,
+            centralised logging, GuardDuty, Security Hub, and networking (Transit Gateway + VPC peering)
+            across dev, staging, and prod accounts from a single codebase.
+          </p>
+          <ul class="project-highlights">
+            <li><strong>Accounts:</strong> AWS Organizations with SCPs, delegated admin for Security Hub</li>
+            <li><strong>Networking:</strong> Transit Gateway hub-and-spoke across accounts and regions</li>
+            <li><strong>Security:</strong> GuardDuty, CloudTrail, Config rules, S3 access logging centralised</li>
+            <li><strong>State:</strong> Remote state in S3 + DynamoDB locking with per-account workspaces</li>
+            <li><strong>Modules:</strong> Reusable modules for VPC, EKS, RDS, IAM roles with semantic versioning</li>
+          </ul>
+          <div class="project-footer">
+            <a href="https://github.com/raghunathpradhan" target="_blank" rel="noopener" class="project-github-link">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+              View on GitHub
+            </a>
+          </div>
+        </div>
+
+        <!-- Project 4 -->
+        <div class="project-card" data-category="monitoring kubernetes aws">
+          <div class="project-card-top">
+            <div class="project-stack">
+              <span class="badge k8s">📊 Prometheus</span>
+              <span class="badge">📈 Grafana</span>
+              <span class="badge k8s">☸ Kubernetes</span>
+            </div>
+            <span class="project-status status-wip">In Progress</span>
+          </div>
+          <h2 class="project-title">Kubernetes Observability Stack</h2>
+          <p class="project-desc">
+            Full observability platform for Kubernetes using Prometheus, Grafana, Loki, and Tempo.
+            Deployed via Helm with custom dashboards, alert rules mapped to SLOs, and PagerDuty integration
+            for on-call routing.
+          </p>
+          <ul class="project-highlights">
+            <li><strong>Metrics:</strong> kube-state-metrics + node-exporter, custom app metrics via ServiceMonitor</li>
+            <li><strong>Dashboards:</strong> Grafana with pre-built K8s dashboards + custom SLO/SLA panels</li>
+            <li><strong>Logs:</strong> Loki + Promtail for pod log aggregation with label-based filtering</li>
+            <li><strong>Traces:</strong> Tempo + OpenTelemetry for distributed tracing across microservices</li>
+            <li><strong>Alerting:</strong> AlertManager with PagerDuty routing and silence windows via Terraform</li>
+          </ul>
+          <div class="project-footer">
+            <a href="https://github.com/raghunathpradhan" target="_blank" rel="noopener" class="project-github-link">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+              View on GitHub
+            </a>
+          </div>
+        </div>
+
+        <!-- Project 5 -->
+        <div class="project-card" data-category="cicd aws">
+          <div class="project-card-top">
+            <div class="project-stack">
+              <span class="badge">⚡ GitHub Actions</span>
+              <span class="badge aws">☁ AWS</span>
+              <span class="badge terraform">🏗 Terraform</span>
+            </div>
+            <span class="project-status status-active">Active</span>
+          </div>
+          <h2 class="project-title">GitHub Actions Self-Hosted Runner on ECS</h2>
+          <p class="project-desc">
+            Auto-scaling GitHub Actions self-hosted runners using ECS Fargate. Runners spin up on demand,
+            execute the workflow job, and terminate — eliminating idle costs and fixing the cold-start
+            problem of queued jobs.
+          </p>
+          <ul class="project-highlights">
+            <li><strong>Runners:</strong> ECS Fargate tasks registered as GitHub Actions runners via API token</li>
+            <li><strong>Scaling:</strong> EventBridge + Lambda watches job queue; scales ECS service up/down</li>
+            <li><strong>Security:</strong> Runners in private subnets, IRSA for AWS access, no persistent credentials</li>
+            <li><strong>Cost:</strong> ~$0 when idle — Fargate tasks terminate after job completion</li>
+            <li><strong>IaC:</strong> Full Terraform module — ECS cluster, task definition, IAM, EventBridge rules</li>
+          </ul>
+          <div class="project-footer">
+            <a href="https://github.com/raghunathpradhan" target="_blank" rel="noopener" class="project-github-link">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+              View on GitHub
+            </a>
+          </div>
+        </div>
+
+        <!-- Project 6 -->
+        <div class="project-card" data-category="kubernetes terraform cicd">
+          <div class="project-card-top">
+            <div class="project-stack">
+              <span class="badge k8s">☸ Argo CD</span>
+              <span class="badge k8s">⛵ Helm</span>
+              <span class="badge terraform">🏗 Terraform</span>
+            </div>
+            <span class="project-status status-wip">In Progress</span>
+          </div>
+          <h2 class="project-title">GitOps Platform with Argo CD &amp; Helm</h2>
+          <p class="project-desc">
+            A GitOps-first deployment platform where all Kubernetes application state is driven by Git.
+            Argo CD manages environment-specific Helm releases using ApplicationSets, with automated
+            image updates via Argo CD Image Updater.
+          </p>
+          <ul class="project-highlights">
+            <li><strong>GitOps:</strong> Single Git repo as source of truth for all K8s manifests and Helm values</li>
+            <li><strong>ApplicationSets:</strong> Matrix generator deploys same app across dev/staging/prod automatically</li>
+            <li><strong>Image Updates:</strong> Argo CD Image Updater watches ECR, auto-PRs new image tags to Git</li>
+            <li><strong>RBAC:</strong> Argo CD RBAC with SSO (Okta OIDC) for team-level access control</li>
+            <li><strong>Bootstrap:</strong> Argo CD itself bootstrapped via Terraform + Helm on cluster creation</li>
+          </ul>
+          <div class="project-footer">
+            <a href="https://github.com/raghunathpradhan" target="_blank" rel="noopener" class="project-github-link">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+              View on GitHub
+            </a>
+          </div>
+        </div>
+
+        <div id="noResults" class="no-results" style="display:none;">No projects match your filter.</div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand-name">CloudScope</div>
+          <p class="footer-brand-desc">
+            DevOps interview prep by Raghunath Pradhan — Sr. DevOps Engineer @ JP Morgan Chase.
+          </p>
+        </div>
+        <div class="footer-col">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="blog.html">Blog</a></li>
+            <li><a href="interview.html">Interview Prep</a></li>
+            <li><a href="projects.html">Projects</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Topics</h4>
+          <ul>
+            <li><a href="interview.html">Kubernetes Q&amp;A</a></li>
+            <li><a href="interview.html">Docker Q&amp;A</a></li>
+            <li><a href="interview.html">AWS Q&amp;A</a></li>
+            <li><a href="interview.html">Terraform Q&amp;A</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">&copy; 2025 CloudScope by Raghunath Pradhan. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <button id="backToTop" class="back-to-top" aria-label="Back to top">↑</button>
+  <script src="../js/scripts.js"></script>
+  <script>
+    // Projects filter (reuses filter-btn logic but targets project cards)
+    const projFilterBtns = document.querySelectorAll('.filter-btn');
+    const projCards = document.querySelectorAll('.project-card');
+    const projNoResults = document.getElementById('noResults');
+
+    projFilterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        projFilterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filter = btn.dataset.filter;
+        let visible = 0;
+        projCards.forEach(card => {
+          const cats = (card.dataset.category || '').split(' ');
+          const show = filter === 'all' || cats.includes(filter);
+          card.style.display = show ? '' : 'none';
+          if (show) visible++;
+        });
+        if (projNoResults) projNoResults.style.display = visible === 0 ? 'block' : 'none';
+      });
+    });
+  </script>
+</body>
+</html>
