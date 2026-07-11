@@ -32,7 +32,7 @@
       <h1>Interview Prep</h1>
       <p>Curated Q&amp;A for DevOps, Kubernetes, Docker, AWS, and Terraform interviews.</p>
       <div class="page-stats">
-        <span>50+ Questions</span>
+        <span>19 Questions</span>
         <span>4 Topics</span>
         <span>Updated July 2025</span>
       </div>
@@ -65,15 +65,73 @@
 
             <div class="qa-item">
               <button class="qa-question">
-                What is the difference between a Deployment and a StatefulSet?
+                What is the difference between a Deployment and a StatefulSet, and when would you use each?
                 <span class="qa-chevron">▼</span>
               </button>
               <div class="qa-answer">
                 <div class="qa-answer-inner">
-                  A <code>Deployment</code> manages stateless applications — pods are interchangeable and can be
-                  replaced in any order. A <code>StatefulSet</code> is for stateful applications (databases, message
-                  queues) where each pod gets a stable, unique identity (e.g. <code>mysql-0</code>, <code>mysql-1</code>),
-                  stable network DNS, and stable persistent storage that persists across rescheduling.
+                  <p>Both manage a set of pods, but they handle identity, storage, and ordering very differently.</p>
+
+                  <p><strong>Deployment</strong> — for stateless applications:</p>
+                  <ul>
+                    <li>Pods are <strong>identical and interchangeable</strong> — no stable identity</li>
+                    <li>Pods are named randomly (e.g. <code>app-7d9f8b-xkq2p</code>)</li>
+                    <li>Can be scaled up/down and replaced <strong>in any order</strong></li>
+                    <li>All pods share the same PVC or use no persistent storage</li>
+                    <li>Rolling updates replace pods freely without ordering guarantees</li>
+                  </ul>
+                  <pre><code>kubectl create deployment nginx --image=nginx --replicas=3</code></pre>
+                  <p><em>Use for:</em> web servers, API services, microservices, workers — anything where every pod does the same job and data lives elsewhere.</p>
+
+                  <p><strong>StatefulSet</strong> — for stateful applications:</p>
+                  <ul>
+                    <li>Each pod gets a <strong>stable, unique identity</strong> that persists across rescheduling (e.g. <code>mysql-0</code>, <code>mysql-1</code>, <code>mysql-2</code>)</li>
+                    <li>Each pod gets its <strong>own PersistentVolumeClaim</strong> — storage is not shared and survives pod deletion</li>
+                    <li>Pods start and stop in <strong>strict order</strong> (0 → 1 → 2 up, 2 → 1 → 0 down)</li>
+                    <li>Each pod gets a stable DNS hostname: <code>mysql-0.mysql.default.svc.cluster.local</code></li>
+                  </ul>
+                  <pre><code>apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+spec:
+  serviceName: "mysql"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/mysql
+  volumeClaimTemplates:          # ← each pod gets its own PVC
+  - metadata:
+      name: data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi</code></pre>
+                  <p><em>Use for:</em> databases (MySQL, PostgreSQL, MongoDB), message queues (Kafka, RabbitMQ), distributed systems (Elasticsearch, ZooKeeper) — anything where pod identity and per-pod storage matter.</p>
+
+                  <p><strong>Quick comparison:</strong></p>
+                  <table>
+                    <thead><tr><th>Feature</th><th>Deployment</th><th>StatefulSet</th></tr></thead>
+                    <tbody>
+                      <tr><td>Pod identity</td><td>Random, replaceable</td><td>Stable, ordered</td></tr>
+                      <tr><td>Storage</td><td>Shared or none</td><td>Per-pod PVC</td></tr>
+                      <tr><td>Scale order</td><td>Any order</td><td>Sequential</td></tr>
+                      <tr><td>DNS hostname</td><td>Random</td><td>Stable, predictable</td></tr>
+                      <tr><td>Use case</td><td>Stateless apps</td><td>Stateful apps / DBs</td></tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
@@ -120,6 +178,63 @@
                   projects, or environments. Resources in different namespaces are isolated by default. You can apply
                   <code>ResourceQuotas</code> and <code>LimitRanges</code> per namespace. Common defaults are
                   <code>default</code>, <code>kube-system</code>, and <code>kube-public</code>.
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                How would you set up storage in Kubernetes so multiple pods — possibly on different nodes — can access and share the same volume?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  <p>You need a <strong>PersistentVolume (PV)</strong> with <code>accessModes: [ReadWriteMany]</code> (RWX), backed by a storage system that supports concurrent multi-node access — such as <strong>NFS</strong>, <strong>Amazon EFS</strong>, <strong>CephFS</strong>, <strong>Azure Files</strong>, or <strong>GlusterFS</strong>. Standard block storage (EBS, GCE PD) only supports <code>ReadWriteOnce</code> (single node).</p>
+
+                  <p><strong>Step 1 — Create a PersistentVolume (or use a StorageClass that provisions one):</strong></p>
+                  <pre><code>apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: shared-pv
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany        # ← key: allows multiple nodes
+  nfs:
+    server: nfs-server.example.com
+    path: /shared/data</code></pre>
+
+                  <p><strong>Step 2 — Create a PersistentVolumeClaim:</strong></p>
+                  <pre><code>apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shared-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi</code></pre>
+
+                  <p><strong>Step 3 — Mount the same PVC in multiple pods:</strong></p>
+                  <pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-a
+spec:
+  containers:
+  - name: app
+    image: nginx
+    volumeMounts:
+    - mountPath: /data
+      name: shared-storage
+  volumes:
+  - name: shared-storage
+    persistentVolumeClaim:
+      claimName: shared-pvc   # ← same PVC name in pod-b too</code></pre>
+
+                  <p>Any number of pods — across different nodes — referencing the same <code>claimName</code> will all read and write to the same underlying storage. Use <strong>Amazon EFS</strong> on AWS or <strong>Azure Files</strong> on Azure for fully managed RWX storage without running your own NFS server.</p>
                 </div>
               </div>
             </div>
