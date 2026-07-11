@@ -1124,6 +1124,52 @@ ul, ol { list-style: none; }
 .contact-label { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 4px; }
 .contact-value { font-size: 0.92rem; font-weight: 500; color: var(--text); }
 
+/* ── Author Card (homepage) ── */
+.author-card {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 36px 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.author-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--accent) 0%, #a78bfa 100%);
+  border-radius: 3px 0 0 3px;
+}
+
+.author-card-body { flex: 1; }
+
+.author-card-name {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 8px 0 10px;
+  letter-spacing: -0.02em;
+}
+
+.author-card-bio {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.75;
+  margin-bottom: 20px;
+  max-width: 580px;
+}
+
+.author-card-links {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 /* ── Footer ── */
 .footer {
   background: var(--bg-card);
@@ -1240,6 +1286,9 @@ ul, ol { list-style: none; }
   .about-hero-links { justify-content: center; }
   .offer-grid { grid-template-columns: repeat(2, 1fr); }
   .about-cta { padding: 36px 24px; }
+  .author-card { flex-direction: column; text-align: center; padding: 28px 24px; gap: 20px; }
+  .author-card::before { left: 0; right: 0; top: 0; bottom: auto; width: auto; height: 3px; background: linear-gradient(90deg, var(--accent), #a78bfa); border-radius: 3px 3px 0 0; }
+  .author-card-links { justify-content: center; }
 
   .contact-layout { grid-template-columns: 1fr; }
   .contact-info { flex-direction: row; flex-wrap: wrap; }
