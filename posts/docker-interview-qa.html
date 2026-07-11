@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Top Docker Interview Questions &amp; Answers (2025) — CloudScope</title>
+  <meta name="description" content="Master the top Docker interview questions with detailed answers — CMD vs ENTRYPOINT, multi-stage builds, networking, volumes, and more.">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="../index.html" class="nav-brand">CloudScope</a>
+      <div class="nav-links">
+        <a href="../index.html">Home</a>
+        <a href="../pages/blog.html">Blog</a>
+        <a href="../pages/interview.html">Interview Prep</a>
+        <a href="../pages/about.html">About</a>
+        <a href="../pages/contact.html">Contact</a>
+      </div>
+      <button class="hamburger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="post-layout">
+
+      <!-- Main content -->
+      <article>
+        <header class="post-header">
+          <div class="card-badges">
+            <span class="badge docker">🐳 Docker</span>
+            <span class="badge interview">✅ Interview</span>
+          </div>
+          <h1>Top Docker Interview Questions &amp; Answers (2025)</h1>
+          <div class="post-meta-bar">
+            <span>📅 Jul 8, 2025</span>
+            <span>⏱ 12 min read</span>
+            <span>✍ Raghunath Pradhan</span>
+          </div>
+        </header>
+        <div class="post-divider"></div>
+
+        <div class="post-content">
+
+          <h2 id="q1">1. What is Docker and why use it?</h2>
+          <p>
+            Docker is an open-source platform that packages applications and their dependencies into lightweight, portable
+            units called <strong>containers</strong>. Containers share the host OS kernel but are isolated using Linux
+            namespaces and cgroups, making them faster and more resource-efficient than virtual machines.
+          </p>
+          <p>
+            The key benefit is environment consistency — a container runs identically on a developer's laptop, a CI
+            server, and production. This eliminates the classic "works on my machine" problem and simplifies deployment
+            pipelines significantly.
+          </p>
+
+          <h2 id="q2">2. What is the difference between CMD and ENTRYPOINT?</h2>
+          <p>
+            <code>ENTRYPOINT</code> sets the executable that always runs when the container starts. <code>CMD</code>
+            provides default arguments to that executable and can be overridden at runtime.
+          </p>
+          <pre><code># ENTRYPOINT sets the fixed executable
+ENTRYPOINT ["python3", "app.py"]
+
+# CMD provides overridable defaults
+CMD ["--port", "8080"]
+
+# At runtime, you can override CMD:
+# docker run myimage --port 9090
+
+# To override ENTRYPOINT you need --entrypoint:
+# docker run --entrypoint /bin/sh myimage</code></pre>
+          <p>
+            Best practice: use <code>ENTRYPOINT</code> in exec form for the main process, and <code>CMD</code>
+            for default arguments. Avoid shell form — exec form doesn't spawn a shell and properly handles signals.
+          </p>
+
+          <h2 id="q3">3. What is a multi-stage build?</h2>
+          <p>
+            A multi-stage build uses multiple <code>FROM</code> statements in a single Dockerfile. Each stage can
+            produce intermediate artifacts, and the final stage only copies what's needed — eliminating compilers,
+            build tools, and dev dependencies from the production image.
+          </p>
+          <pre><code># Stage 1: Build
+FROM golang:1.22-alpine AS builder
+WORKDIR /app
+COPY . .
+RUN go build -o server .
+
+# Stage 2: Runtime (only copies the binary)
+FROM alpine:3.19
+WORKDIR /app
+COPY --from=builder /app/server .
+EXPOSE 8080
+ENTRYPOINT ["./server"]</code></pre>
+          <p>
+            The result is a tiny production image (often &lt;20 MB instead of &gt;800 MB) with a smaller attack surface.
+          </p>
+
+          <h2 id="q4">4. What is the difference between COPY and ADD?</h2>
+          <p>
+            Both instructions copy files into the image, but <code>ADD</code> has extra capabilities: it can
+            automatically extract local <code>.tar</code> archives into the destination path, and it can fetch
+            files from remote URLs.
+          </p>
+          <pre><code># COPY — straightforward file copy (preferred)
+COPY ./config /app/config
+
+# ADD — auto-extracts archives, fetches URLs (use only when needed)
+ADD app.tar.gz /app/</code></pre>
+          <p>
+            Prefer <code>COPY</code> for predictability. Only use <code>ADD</code> when you specifically need
+            archive extraction — its implicit behaviour can lead to unexpected results in builds.
+          </p>
+
+          <h2 id="q5">5. What are Docker networking modes?</h2>
+          <p>Docker supports several network drivers:</p>
+          <ul>
+            <li><strong>bridge</strong> (default) — containers get their own IP on a virtual bridge network; containers can communicate with each other if on the same bridge network.</li>
+            <li><strong>host</strong> — container shares the host's network stack; no port mapping needed, but no isolation.</li>
+            <li><strong>none</strong> — completely isolated; the container has no network interfaces.</li>
+            <li><strong>overlay</strong> — spans multiple Docker hosts (Docker Swarm / Kubernetes); enables cross-host container communication.</li>
+          </ul>
+          <pre><code># Inspect a container's network
+docker inspect &lt;container&gt; --format '{{json .NetworkSettings.Networks}}'
+
+# Connect a running container to a second network
+docker network connect my-network my-container</code></pre>
+
+          <h2 id="q6">6. What is a Docker volume?</h2>
+          <p>
+            A volume is a mechanism to persist data generated by and used by containers. Unlike bind mounts (which
+            link a host path), volumes are managed by Docker and stored at <code>/var/lib/docker/volumes/</code>.
+          </p>
+          <pre><code># Create a named volume
+docker volume create pgdata
+
+# Mount it into a container
+docker run -v pgdata:/var/lib/postgresql/data postgres:16
+
+# List volumes
+docker volume ls
+
+# Remove unused volumes
+docker volume prune</code></pre>
+          <p>
+            Volumes survive container deletion, can be shared between containers, and are the recommended way to
+            handle persistent data (databases, file uploads) in Docker.
+          </p>
+
+          <h2 id="q7">7. How do you reduce Docker image size?</h2>
+          <p>Key strategies:</p>
+          <ul>
+            <li>Use a minimal base: <code>alpine</code>, <code>distroless</code>, or <code>scratch</code></li>
+            <li>Use multi-stage builds to exclude build tools from the final image</li>
+            <li>Combine <code>RUN</code> commands to reduce the number of layers</li>
+            <li>Clean up in the same <code>RUN</code> layer where packages are installed</li>
+            <li>Use a <code>.dockerignore</code> file to exclude <code>node_modules</code>, <code>.git</code>, tests, and docs</li>
+          </ul>
+          <pre><code># Combine and clean in one layer
+RUN apt-get update \
+    &amp;&amp; apt-get install -y --no-install-recommends curl \
+    &amp;&amp; apt-get clean \
+    &amp;&amp; rm -rf /var/lib/apt/lists/*</code></pre>
+
+          <h2 id="q8">8. What is Docker Compose used for?</h2>
+          <p>
+            Docker Compose lets you define multi-container applications in a single <code>docker-compose.yml</code>
+            file, then start the entire stack with one command. It handles networking, volumes, environment variables,
+            and service dependencies declaratively.
+          </p>
+          <pre><code>services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=db
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:</code></pre>
+          <pre><code>docker compose up -d      # Start all services detached
+docker compose logs -f    # Tail all logs
+docker compose down -v    # Stop and remove containers + volumes</code></pre>
+
+          <h2 id="q9">9. What is Docker Hub and how do registries work?</h2>
+          <p>
+            Docker Hub is the default public registry for Docker images — it's where <code>docker pull nginx</code>
+            fetches from. A registry stores and distributes versioned image layers identified by name and tag
+            (e.g. <code>nginx:1.25-alpine</code>). Private registries (AWS ECR, GCR, Harbor) work the same way
+            but require authentication.
+          </p>
+          <pre><code># Tag and push to Docker Hub
+docker tag myapp:latest username/myapp:1.0
+docker push username/myapp:1.0
+
+# Tag and push to AWS ECR
+docker tag myapp:latest 123456789.dkr.ecr.us-east-1.amazonaws.com/myapp:1.0
+docker push 123456789.dkr.ecr.us-east-1.amazonaws.com/myapp:1.0</code></pre>
+
+          <h2 id="q10">10. What is the difference between a Docker image and a container?</h2>
+          <p>
+            An <strong>image</strong> is a read-only, layered template that contains the application code, runtime,
+            libraries, and configuration. It's built from a Dockerfile and stored in a registry. Think of it as a
+            class definition.
+          </p>
+          <p>
+            A <strong>container</strong> is a running instance of an image. When you run a container, Docker adds a
+            thin writable layer on top of the image's read-only layers. Multiple containers can run from the same image
+            simultaneously, each with its own writable layer. Think of it as an object instance.
+          </p>
+          <pre><code># Images
+docker images                    # List local images
+docker pull nginx:alpine         # Pull from registry
+docker build -t myapp:1.0 .     # Build from Dockerfile
+docker rmi myapp:1.0            # Remove image
+
+# Containers
+docker run -d -p 80:80 nginx    # Create + start container
+docker ps                        # List running containers
+docker stop &lt;id&gt;                # Stop container
+docker rm &lt;id&gt;                  # Remove container</code></pre>
+
+        </div>
+
+        <!-- Post navigation -->
+        <div class="post-nav">
+          <a href="kubernetes-pod-basics.html">← Kubernetes Pods Guide</a>
+          <a href="../pages/interview.html">More Interview Prep →</a>
+        </div>
+      </article>
+
+      <!-- Sidebar TOC -->
+      <aside class="post-sidebar">
+        <div class="toc-card">
+          <div class="toc-title">Questions</div>
+          <nav class="toc-links">
+            <a href="#q1">1. What is Docker?</a>
+            <a href="#q2">2. CMD vs ENTRYPOINT</a>
+            <a href="#q3">3. Multi-stage builds</a>
+            <a href="#q4">4. COPY vs ADD</a>
+            <a href="#q5">5. Networking modes</a>
+            <a href="#q6">6. Docker volumes</a>
+            <a href="#q7">7. Reduce image size</a>
+            <a href="#q8">8. Docker Compose</a>
+            <a href="#q9">9. Registries</a>
+            <a href="#q10">10. Image vs Container</a>
+          </nav>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand-name">CloudScope</div>
+          <p class="footer-brand-desc">A personal DevOps blog by Raghunath Pradhan.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="../pages/blog.html">Blog</a></li>
+            <li><a href="../pages/interview.html">Interview Prep</a></li>
+            <li><a href="../pages/about.html">About</a></li>
+            <li><a href="../pages/contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Categories</h4>
+          <ul>
+            <li><a href="../pages/blog.html">Kubernetes</a></li>
+            <li><a href="../pages/blog.html">Docker</a></li>
+            <li><a href="../pages/blog.html">AWS</a></li>
+            <li><a href="../pages/blog.html">Terraform</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">&copy; 2025 CloudScope by Raghunath Pradhan. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <button id="backToTop" class="back-to-top" aria-label="Back to top">↑</button>
+  <script src="../js/scripts.js"></script>
+</body>
+</html>

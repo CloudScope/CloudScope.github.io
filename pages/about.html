@@ -1,27 +1,162 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About - CloudScope Blog</title>
-    <link rel="stylesheet" href="../css/styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — CloudScope</title>
+  <meta name="description" content="About Raghunath Pradhan — DevOps Engineer and creator of CloudScope blog.">
+  <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
-    <header>
-        <h1>About This Blog</h1>
-    </header>
-    <main>
-        <section>
-            <h2>Welcome to CloudScope</h2>
-            <p>This blog is dedicated to sharing insights, tutorials, and resources related to cloud computing and technology. Our goal is to provide valuable information to help you navigate the ever-evolving landscape of cloud services.</p>
-            <h3>About the Author</h3>
-            <p>My name is Raghunath, and I am passionate about technology and cloud solutions. With years of experience in the field, I aim to share my knowledge and help others succeed in their cloud journey.</p>
-        </section>
-        <button onclick="history.back()">Go Back</button>
-    </main>
-    <footer>
-        <p>&copy; 2025 CloudScope. All rights reserved.</p>
-    </footer>
-    <script src="../js/scripts.js"></script>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="../index.html" class="nav-brand">CloudScope</a>
+      <div class="nav-links">
+        <a href="../index.html">Home</a>
+        <a href="blog.html">Blog</a>
+        <a href="interview.html">Interview Prep</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <button class="hamburger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="container">
+      <h1>About Me</h1>
+      <p>The person behind CloudScope.</p>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="container">
+      <div class="about-layout">
+
+        <!-- Profile card -->
+        <aside>
+          <div class="profile-card">
+            <div class="profile-avatar">👨‍💻</div>
+            <div class="profile-name">Raghunath Pradhan</div>
+            <div class="profile-role">DevOps Engineer</div>
+            <div class="profile-tags">
+              <span class="profile-tag">Kubernetes</span>
+              <span class="profile-tag">Docker</span>
+              <span class="profile-tag">AWS</span>
+              <span class="profile-tag">Terraform</span>
+              <span class="profile-tag">CI/CD</span>
+              <span class="profile-tag">Linux</span>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Content -->
+        <div class="about-content">
+          <section>
+            <h2>About Me</h2>
+            <p>
+              I'm Raghunath Pradhan, a DevOps Engineer passionate about cloud-native technologies and infrastructure
+              automation. I work extensively with Kubernetes, Docker, AWS, Terraform, and CI/CD pipelines to build
+              reliable, scalable systems.
+            </p>
+            <p>
+              I created CloudScope as a place to document my learning journey — the concepts I'm studying, the
+              problems I'm solving, and the knowledge I want to retain and share. Whether you're preparing for
+              a DevOps interview or exploring cloud technologies, I hope this blog helps you along the way.
+            </p>
+          </section>
+
+          <section>
+            <h2>What I Write About</h2>
+            <p>
+              My posts focus on practical DevOps topics: container orchestration with Kubernetes, containerization
+              with Docker, cloud infrastructure on AWS, Infrastructure as Code with Terraform, and CI/CD pipeline
+              design. I also curate interview Q&amp;A based on real questions I've encountered, to help engineers
+              prepare for technical interviews with confidence.
+            </p>
+          </section>
+
+          <section>
+            <h2>My Tech Stack</h2>
+            <div class="skills-grid">
+              <div class="skill-item">
+                <span class="skill-icon">☸</span>
+                <span class="skill-name">Kubernetes</span>
+              </div>
+              <div class="skill-item">
+                <span class="skill-icon">🐳</span>
+                <span class="skill-name">Docker</span>
+              </div>
+              <div class="skill-item">
+                <span class="skill-icon">☁</span>
+                <span class="skill-name">AWS</span>
+              </div>
+              <div class="skill-item">
+                <span class="skill-icon">🏗</span>
+                <span class="skill-name">Terraform</span>
+              </div>
+              <div class="skill-item">
+                <span class="skill-icon">⚙</span>
+                <span class="skill-name">Jenkins</span>
+              </div>
+              <div class="skill-item">
+                <span class="skill-icon">🔄</span>
+                <span class="skill-name">GitHub Actions</span>
+              </div>
+              <div class="skill-item">
+                <span class="skill-icon">🐧</span>
+                <span class="skill-name">Linux</span>
+              </div>
+              <div class="skill-item">
+                <span class="skill-icon">🐍</span>
+                <span class="skill-name">Python</span>
+              </div>
+            </div>
+          </section>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand-name">CloudScope</div>
+          <p class="footer-brand-desc">A personal DevOps blog by Raghunath Pradhan.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="blog.html">Blog</a></li>
+            <li><a href="interview.html">Interview Prep</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Categories</h4>
+          <ul>
+            <li><a href="blog.html">Kubernetes</a></li>
+            <li><a href="blog.html">Docker</a></li>
+            <li><a href="blog.html">AWS</a></li>
+            <li><a href="blog.html">Terraform</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">&copy; 2025 CloudScope by Raghunath Pradhan. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <button id="backToTop" class="back-to-top" aria-label="Back to top">↑</button>
+  <script src="../js/scripts.js"></script>
 </body>
 </html>

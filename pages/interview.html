@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interview Prep — CloudScope</title>
+  <meta name="description" content="Curated DevOps interview Q&A for Kubernetes, Docker, AWS, and Terraform.">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="../index.html" class="nav-brand">CloudScope</a>
+      <div class="nav-links">
+        <a href="../index.html">Home</a>
+        <a href="blog.html">Blog</a>
+        <a href="interview.html">Interview Prep</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <button class="hamburger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="container">
+      <h1>Interview Prep</h1>
+      <p>Curated Q&amp;A for DevOps, Kubernetes, Docker, AWS, and Terraform interviews.</p>
+      <div class="page-stats">
+        <span>50+ Questions</span>
+        <span>4 Topics</span>
+        <span>Updated July 2025</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="container">
+      <div class="interview-categories">
+
+        <!-- Kubernetes -->
+        <div class="interview-category">
+          <h2><span class="badge k8s">☸ Kubernetes</span></h2>
+          <div class="qa-list">
+
+            <div class="qa-item">
+              <button class="qa-question">
+                What is a Pod in Kubernetes?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  A Pod is the smallest deployable unit in Kubernetes. It wraps one or more containers that share the
+                  same network namespace (same IP address and port space) and can share storage volumes. Containers
+                  within a Pod communicate over <code>localhost</code>. Pods are ephemeral — if they die, Kubernetes
+                  creates a new one rather than restarting the old one.
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                What is the difference between a Deployment and a StatefulSet?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  A <code>Deployment</code> manages stateless applications — pods are interchangeable and can be
+                  replaced in any order. A <code>StatefulSet</code> is for stateful applications (databases, message
+                  queues) where each pod gets a stable, unique identity (e.g. <code>mysql-0</code>, <code>mysql-1</code>),
+                  stable network DNS, and stable persistent storage that persists across rescheduling.
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                What is a ConfigMap vs a Secret?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  A <code>ConfigMap</code> stores non-sensitive configuration data as key-value pairs (e.g. app settings,
+                  feature flags). A <code>Secret</code> stores sensitive data (passwords, tokens, TLS certificates) and
+                  values are base64-encoded. Secrets can be further protected with encryption at rest and RBAC policies.
+                  Always use Secrets for credentials, never ConfigMaps.
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                How does Kubernetes handle rolling updates?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  When you update a Deployment (e.g. new image tag), the Deployment controller creates a new ReplicaSet
+                  and gradually shifts pods from the old set to the new one. The pace is controlled by
+                  <code>maxSurge</code> (how many extra pods can exist) and <code>maxUnavailable</code> (how many can be
+                  down simultaneously). This ensures zero-downtime deploys. You can roll back with
+                  <code>kubectl rollout undo deployment/name</code>.
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                What is a Namespace in Kubernetes?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  A Namespace is a virtual cluster within a Kubernetes cluster, used for resource isolation across teams,
+                  projects, or environments. Resources in different namespaces are isolated by default. You can apply
+                  <code>ResourceQuotas</code> and <code>LimitRanges</code> per namespace. Common defaults are
+                  <code>default</code>, <code>kube-system</code>, and <code>kube-public</code>.
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Docker -->
+        <div class="interview-category">
+          <h2><span class="badge docker">🐳 Docker</span></h2>
+          <div class="qa-list">
+
+            <div class="qa-item">
+              <button class="qa-question">
+                What is the difference between CMD and ENTRYPOINT?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  <code>ENTRYPOINT</code> defines the executable that always runs when the container starts. <code>CMD</code>
+                  provides default arguments to that executable. <code>CMD</code> can be overridden at runtime
+                  (<code>docker run image arg</code>), but <code>ENTRYPOINT</code> requires <code>--entrypoint</code> to
+                  override. Best practice: use <code>ENTRYPOINT</code> for the main process and <code>CMD</code> for defaults.
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                What is a multi-stage Docker build?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  A multi-stage build uses multiple <code>FROM</code> statements in one Dockerfile. Earlier stages compile
+                  or build the application; the final stage copies only the built artifacts into a minimal base image.
+                  This eliminates build tools, compilers, and intermediate files from the final image — dramatically
+                  reducing image size and attack surface. Example: build in <code>golang:1.22</code>, run in
+                  <code>scratch</code> or <code>alpine</code>.
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                What is the difference between COPY and ADD in a Dockerfile?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  <code>COPY</code> simply copies files or directories from the build context into the image.
+                  <code>ADD</code> does everything <code>COPY</code> does, plus it can auto-extract local tar archives
+                  and fetch remote URLs. Prefer <code>COPY</code> unless you specifically need auto-extraction, since
+                  <code>ADD</code>'s extra behaviour can be surprising and harder to reason about.
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                What is Docker Compose used for?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  Docker Compose lets you define and run multi-container applications using a single
+                  <code>docker-compose.yml</code> file. You declare each service, its image, environment variables,
+                  ports, volumes, and network dependencies. Running <code>docker compose up</code> starts the entire
+                  stack. It's ideal for local development and testing environments where you need multiple services
+                  (app + database + cache) to work together.
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                How do you reduce Docker image size?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  Key strategies: (1) Use a minimal base image like <code>alpine</code> or <code>distroless</code>.
+                  (2) Use multi-stage builds to exclude build tools. (3) Combine <code>RUN</code> commands to reduce
+                  layers. (4) Add a <code>.dockerignore</code> to exclude node_modules, .git, test files.
+                  (5) Remove caches in the same <code>RUN</code> layer: <code>apt-get clean &amp;&amp; rm -rf /var/lib/apt/lists/*</code>.
+                  (6) Avoid installing unnecessary packages.
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- AWS -->
+        <div class="interview-category">
+          <h2><span class="badge aws">☁ AWS</span></h2>
+          <div class="qa-list">
+
+            <div class="qa-item">
+              <button class="qa-question">
+                What is the difference between EC2 and Lambda?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  <code>EC2</code> is a virtual machine — you provision it, it runs continuously, and you're billed by
+                  the hour/second regardless of actual usage. <code>Lambda</code> is serverless and event-driven — code
+                  runs only when triggered, scales automatically to zero, and is billed per invocation and duration.
+                  Use EC2 for long-running workloads with predictable traffic; Lambda for short-lived event-driven tasks.
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                Explain VPC and its core components.
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  A Virtual Private Cloud (VPC) is an isolated network in AWS. Core components: <strong>Subnets</strong>
+                  (public for internet-facing, private for internal resources), <strong>Route Tables</strong> (control traffic
+                  routing), <strong>Internet Gateway</strong> (enables public subnet internet access), <strong>NAT Gateway</strong>
+                  (lets private subnets reach internet without being publicly reachable), <strong>Security Groups</strong>
+                  (stateful instance-level firewall), and <strong>NACLs</strong> (stateless subnet-level firewall).
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                What is S3 and what are its storage classes?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  Amazon S3 (Simple Storage Service) is object storage for any amount of data. Storage classes let you
+                  optimize cost vs. access frequency: <code>Standard</code> (frequent access), <code>Standard-IA</code>
+                  (infrequent access, lower cost), <code>One Zone-IA</code> (single AZ, cheaper), <code>Glacier Instant
+                  Retrieval</code> / <code>Glacier Flexible Retrieval</code> / <code>Glacier Deep Archive</code> (archival,
+                  cheapest), and <code>Intelligent-Tiering</code> (auto-moves objects between tiers based on access patterns).
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                What is IAM and what are the best practices?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  AWS IAM (Identity and Access Management) controls who can do what in your AWS account. Best practices:
+                  (1) Apply <strong>least privilege</strong> — grant only the permissions needed. (2) Use <strong>IAM Roles</strong>
+                  for EC2/Lambda instead of embedding access keys. (3) Enable <strong>MFA</strong> for all human users.
+                  (4) Rotate access keys regularly. (5) Use <strong>IAM Groups</strong> to manage permissions at scale.
+                  (6) Never use the root account for day-to-day operations.
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Terraform -->
+        <div class="interview-category">
+          <h2><span class="badge terraform">🏗 Terraform</span></h2>
+          <div class="qa-list">
+
+            <div class="qa-item">
+              <button class="qa-question">
+                What is Terraform state?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  Terraform state is a file (<code>terraform.tfstate</code>) that records the current state of your
+                  managed infrastructure. Terraform uses it to map real resources to your configuration, track metadata,
+                  and determine what changes are needed on the next apply. For teams, store state remotely (e.g. S3 +
+                  DynamoDB for locking) to enable collaboration and prevent concurrent modifications.
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                What is the difference between terraform plan and terraform apply?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  <code>terraform plan</code> is a dry run — it compares your configuration with the current state and
+                  shows exactly what will be created, updated, or destroyed without making any changes. <code>terraform
+                  apply</code> executes those changes after prompting for confirmation (or with <code>-auto-approve</code>
+                  in CI). Always run <code>plan</code> first in production pipelines and review the diff carefully.
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                What are Terraform modules?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  Modules are reusable, parameterized groups of Terraform resources packaged together. A module takes
+                  input variables and produces outputs, encapsulating complexity. You can call the same module with
+                  different variables for dev/staging/prod environments. Modules can be local (relative path) or remote
+                  (Terraform Registry, Git repo). They promote DRY infrastructure code and consistent patterns across teams.
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                What is a data source in Terraform?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  A data source allows Terraform to read information from existing infrastructure that it doesn't manage.
+                  For example, you can use <code>data "aws_ami"</code> to look up the latest Amazon Linux AMI ID without
+                  hardcoding it, or <code>data "aws_vpc"</code> to reference a VPC created outside your Terraform config.
+                  Data sources are declared with the <code>data</code> block and referenced as <code>data.type.name.attribute</code>.
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand-name">CloudScope</div>
+          <p class="footer-brand-desc">A personal DevOps blog by Raghunath Pradhan.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="blog.html">Blog</a></li>
+            <li><a href="interview.html">Interview Prep</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Topics</h4>
+          <ul>
+            <li><a href="interview.html">Kubernetes Q&amp;A</a></li>
+            <li><a href="interview.html">Docker Q&amp;A</a></li>
+            <li><a href="interview.html">AWS Q&amp;A</a></li>
+            <li><a href="interview.html">Terraform Q&amp;A</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">&copy; 2025 CloudScope by Raghunath Pradhan. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <button id="backToTop" class="back-to-top" aria-label="Back to top">↑</button>
+  <script src="../js/scripts.js"></script>
+</body>
+</html>

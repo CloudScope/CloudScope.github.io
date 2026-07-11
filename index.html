@@ -1,45 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CloudScope</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <script src="js/scripts.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CloudScope — DevOps &amp; Interview Hub</title>
+  <meta name="description" content="DevOps blog covering Kubernetes, Docker, AWS, Terraform, and interview preparation by Raghunath Pradhan.">
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="js/scripts.js" defer></script>
 </head>
 <body>
-    <header>
-        <h1>CloudScope Blog</h1>
-        <nav>
-            <ul>
-                <li><a href="index.html">Home</a></li>
-                <li><a href="pages/about.html">About</a></li>
-                <li><a href="pages/blog.html">Blog</a></li>
-                <li><a href="pages/contact.html">Contact</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main>
-        <section class="hero">
-            <h2>Welcome to CloudScope Blog</h2>
-            <p>Your source for the latest updates and articles.</p>
-        </section>
-        <section class="posts">
-            <h2>Latest Posts</h2>
-            <article>
-                <h3><a href="posts/post1.html">Post Title 1</a></h3>
-                <p>Summary of the first post...</p>
-            </article>
-            <article>
-                <h3><a href="posts/post2.html">Post Title 2</a></h3>
-                <p>Summary of the second post...</p>
-            </article>
-            <!-- Add more posts as needed -->
-        </section>
-        <button onclick="history.back()">Go Back</button>
-    </main>
-    <footer>
-        <p>&copy; 2025 CloudScope. All rights reserved.</p>
-    </footer>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-brand">CloudScope</a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="pages/blog.html">Blog</a>
+        <a href="pages/interview.html">Interview Prep</a>
+        <a href="pages/about.html">About</a>
+        <a href="pages/contact.html">Contact</a>
+      </div>
+      <button class="hamburger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-inner">
+      <span class="hero-badge">DevOps &amp; Cloud Learning</span>
+      <h1 class="gradient-text">CloudScope</h1>
+      <p id="heroTyping" class="hero-typing">DevOps Engineer</p>
+      <p class="hero-desc">
+        Deep dives into Kubernetes, Docker, AWS, Terraform, and real-world DevOps practices.
+        Curated interview Q&amp;A to help you ace your next role.
+      </p>
+      <div class="hero-buttons">
+        <a href="pages/blog.html" class="btn-primary">Browse Posts →</a>
+        <a href="pages/interview.html" class="btn-secondary">Interview Prep</a>
+      </div>
+      <div class="stats-strip">
+        <div class="stat-item">
+          <span class="stat-num">2</span>
+          <span class="stat-label">Articles</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">4</span>
+          <span class="stat-label">Categories</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">50+</span>
+          <span class="stat-label">Q&amp;As</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Latest Posts -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Latest Posts</h2>
+        <a href="pages/blog.html" class="section-link">View all →</a>
+      </div>
+
+      <!-- Filter chips -->
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="kubernetes">Kubernetes</button>
+        <button class="filter-btn" data-filter="docker">Docker</button>
+        <button class="filter-btn" data-filter="aws">AWS</button>
+        <button class="filter-btn" data-filter="terraform">Terraform</button>
+        <button class="filter-btn" data-filter="interview">Interview</button>
+      </div>
+
+      <!-- Posts grid -->
+      <div class="posts-grid">
+        <a href="posts/kubernetes-pod-basics.html" class="post-card" data-category="kubernetes">
+          <div class="card-badges">
+            <span class="badge k8s">☸ Kubernetes</span>
+          </div>
+          <div class="card-title">Kubernetes Pods: Everything You Need to Know</div>
+          <div class="card-excerpt">
+            Understand the smallest deployable unit in Kubernetes — from pod anatomy and lifecycle phases
+            (Pending → Running → Succeeded) to essential kubectl commands and multi-container patterns like
+            sidecar, ambassador, and adapter.
+          </div>
+          <div class="card-meta">
+            <span>📅 Jul 10, 2025</span>
+            <span>⏱ 8 min read</span>
+          </div>
+        </a>
+
+        <a href="posts/docker-interview-qa.html" class="post-card" data-category="docker interview">
+          <div class="card-badges">
+            <span class="badge docker">🐳 Docker</span>
+            <span class="badge interview">✅ Interview</span>
+          </div>
+          <div class="card-title">Top Docker Interview Questions &amp; Answers (2025)</div>
+          <div class="card-excerpt">
+            Master the most frequently asked Docker interview questions — CMD vs ENTRYPOINT, multi-stage builds,
+            networking modes, volumes, image optimization, and the difference between images and containers.
+          </div>
+          <div class="card-meta">
+            <span>📅 Jul 8, 2025</span>
+            <span>⏱ 12 min read</span>
+          </div>
+        </a>
+
+        <div id="noResults" class="no-results">No posts match your search.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand-name">CloudScope</div>
+          <p class="footer-brand-desc">
+            A personal DevOps blog by Raghunath Pradhan — documenting the cloud-native learning journey
+            through articles, tutorials, and interview prep.
+          </p>
+        </div>
+        <div class="footer-col">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="pages/blog.html">Blog</a></li>
+            <li><a href="pages/interview.html">Interview Prep</a></li>
+            <li><a href="pages/about.html">About</a></li>
+            <li><a href="pages/contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Categories</h4>
+          <ul>
+            <li><a href="pages/blog.html">Kubernetes</a></li>
+            <li><a href="pages/blog.html">Docker</a></li>
+            <li><a href="pages/blog.html">AWS</a></li>
+            <li><a href="pages/blog.html">Terraform</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        &copy; 2025 CloudScope by Raghunath Pradhan. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <button id="backToTop" class="back-to-top" aria-label="Back to top">↑</button>
+
 </body>
 </html>

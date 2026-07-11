@@ -1,41 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blog - CloudScope</title>
-    <link rel="stylesheet" href="../css/styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog — CloudScope</title>
+  <meta name="description" content="DevOps articles covering Kubernetes, Docker, AWS, Terraform and interview preparation.">
+  <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
-    <header>
-        <h1>CloudScope Blog</h1>
-        <nav>
-            <ul>
-                <li><a href="../index.html">Home</a></li>
-                <li><a href="about.html">About</a></li>
-                <li><a href="contact.html">Contact</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main>
-        <h2>Blog Posts</h2>
-        <article>
-            <h3>Post Title 1</h3>
-            <p>Summary of the first blog post. <a href="#">Read more...</a></p>
-        </article>
-        <article>
-            <h3>Post Title 2</h3>
-            <p>Summary of the second blog post. <a href="#">Read more...</a></p>
-        </article>
-        <article>
-            <h3>Post Title 3</h3>
-            <p>Summary of the third blog post. <a href="#">Read more...</a></p>
-        </article>
-        <button onclick="history.back()">Go Back</button>
-    </main>
-    <footer>
-        <p>&copy; 2025 CloudScope. All rights reserved.</p>
-    </footer>
-    <script src="../js/scripts.js"></script>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="../index.html" class="nav-brand">CloudScope</a>
+      <div class="nav-links">
+        <a href="../index.html">Home</a>
+        <a href="blog.html">Blog</a>
+        <a href="interview.html">Interview Prep</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <button class="hamburger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="container">
+      <h1>Blog Posts</h1>
+      <p>Explore DevOps concepts, interview tips, and cloud technology articles.</p>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="container">
+
+      <!-- Search -->
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="search" id="searchInput" placeholder="Search posts…" autocomplete="off">
+      </div>
+
+      <!-- Filter chips -->
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="kubernetes">Kubernetes</button>
+        <button class="filter-btn" data-filter="docker">Docker</button>
+        <button class="filter-btn" data-filter="aws">AWS</button>
+        <button class="filter-btn" data-filter="terraform">Terraform</button>
+        <button class="filter-btn" data-filter="interview">Interview</button>
+      </div>
+
+      <!-- Posts grid -->
+      <div class="posts-grid">
+        <a href="../posts/kubernetes-pod-basics.html" class="post-card" data-category="kubernetes">
+          <div class="card-badges">
+            <span class="badge k8s">☸ Kubernetes</span>
+          </div>
+          <div class="card-title">Kubernetes Pods: Everything You Need to Know</div>
+          <div class="card-excerpt">
+            Understand the smallest deployable unit in Kubernetes — from pod anatomy and lifecycle phases
+            (Pending → Running → Succeeded) to essential kubectl commands and multi-container patterns like
+            sidecar, ambassador, and adapter.
+          </div>
+          <div class="card-meta">
+            <span>📅 Jul 10, 2025</span>
+            <span>⏱ 8 min read</span>
+          </div>
+        </a>
+
+        <a href="../posts/docker-interview-qa.html" class="post-card" data-category="docker interview">
+          <div class="card-badges">
+            <span class="badge docker">🐳 Docker</span>
+            <span class="badge interview">✅ Interview</span>
+          </div>
+          <div class="card-title">Top Docker Interview Questions &amp; Answers (2025)</div>
+          <div class="card-excerpt">
+            Master the most frequently asked Docker interview questions — CMD vs ENTRYPOINT, multi-stage builds,
+            networking modes, volumes, image optimization, and the difference between images and containers.
+          </div>
+          <div class="card-meta">
+            <span>📅 Jul 8, 2025</span>
+            <span>⏱ 12 min read</span>
+          </div>
+        </a>
+
+        <div id="noResults" class="no-results">No posts match your search. Try a different keyword or filter.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand-name">CloudScope</div>
+          <p class="footer-brand-desc">A personal DevOps blog by Raghunath Pradhan.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="blog.html">Blog</a></li>
+            <li><a href="interview.html">Interview Prep</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Categories</h4>
+          <ul>
+            <li><a href="blog.html">Kubernetes</a></li>
+            <li><a href="blog.html">Docker</a></li>
+            <li><a href="blog.html">AWS</a></li>
+            <li><a href="blog.html">Terraform</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">&copy; 2025 CloudScope by Raghunath Pradhan. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <button id="backToTop" class="back-to-top" aria-label="Back to top">↑</button>
+  <script src="../js/scripts.js"></script>
 </body>
 </html>
