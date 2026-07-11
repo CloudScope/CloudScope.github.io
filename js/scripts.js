@@ -28,7 +28,7 @@ if (typingEl) {
     'DevOps Engineer',
     'Cloud Enthusiast',
     'Kubernetes Explorer',
-    'Interview Prepper',
+    'Interview Prep Expert',
     'Infrastructure Builder'
   ];
   let phraseIndex = 0;
