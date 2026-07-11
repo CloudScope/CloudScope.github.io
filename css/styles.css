@@ -134,7 +134,7 @@ ul, ol { list-style: none; }
 
 /* ── Hero ── */
 .hero {
-  min-height: 100vh;
+  min-height: calc(100vh - var(--nav-h));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -560,7 +560,7 @@ ul, ol { list-style: none; }
   overflow: hidden;
   transition: max-height 0.35s ease;
 }
-.qa-item.open .qa-answer { max-height: 600px; }
+.qa-item.open .qa-answer { max-height: 2000px; }
 
 .qa-answer-inner {
   padding: 0 20px 20px;
@@ -755,14 +755,17 @@ ul, ol { list-style: none; }
   align-items: start;
 }
 
+.about-layout > aside {
+  position: sticky;
+  top: calc(var(--nav-h) + 24px);
+}
+
 .profile-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 32px 24px;
   text-align: center;
-  position: sticky;
-  top: calc(var(--nav-h) + 24px);
 }
 
 .profile-avatar {
@@ -837,6 +840,13 @@ ul, ol { list-style: none; }
 .skill-name { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
 
 /* ── Contact Page ── */
+.contact-form-wrap {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+}
+
 .contact-layout {
   display: grid;
   grid-template-columns: 1fr 300px;
