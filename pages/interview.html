@@ -32,8 +32,8 @@
       <h1>Interview Prep</h1>
       <p>Curated Q&amp;A for DevOps, Kubernetes, Docker, AWS, and Terraform interviews.</p>
       <div class="page-stats">
-        <span>19 Questions</span>
-        <span>4 Topics</span>
+        <span>31 Questions</span>
+        <span>5 Topics</span>
         <span>Updated July 2025</span>
       </div>
     </div>
@@ -169,6 +169,313 @@ spec:
 
             <div class="qa-item">
               <button class="qa-question">
+                We use Rolling Update strategy. How do we ensure pods don't drop live traffic during a rollout?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  <p>A rolling update can silently drop requests if you don't configure the pod shutdown sequence carefully. There are four things you need to get right:</p>
+
+                  <p><strong>1. Readiness probe — only send traffic to ready pods</strong></p>
+                  <p>Kubernetes removes a pod from Service endpoints only when its readiness probe fails. New pods won't receive traffic until they pass. Without this, traffic hits pods that aren't ready yet.</p>
+                  <pre><code>readinessProbe:
+  httpGet:
+    path: /healthz
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 5</code></pre>
+
+                  <p><strong>2. <code>maxUnavailable: 0</code> — never terminate an old pod before a new one is ready</strong></p>
+                  <pre><code>strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1          # spin up 1 extra pod first
+    maxUnavailable: 0    # never go below desired replica count</code></pre>
+
+                  <p><strong>3. <code>preStop</code> hook + sleep — let kube-proxy drain the pod from iptables</strong></p>
+                  <p>When a pod is terminated, Kubernetes removes it from the Service endpoints list <em>and</em> sends SIGTERM at the same time. kube-proxy takes a few seconds to propagate the iptables rule change. Without a preStop sleep, new requests can still be routed to the dying pod during that gap.</p>
+                  <pre><code>lifecycle:
+  preStop:
+    exec:
+      command: ["sleep", "5"]   # wait for kube-proxy to drain</code></pre>
+
+                  <p><strong>4. <code>terminationGracePeriodSeconds</code> — allow in-flight requests to finish</strong></p>
+                  <p>After SIGTERM, give the app time to finish handling open connections before Kubernetes force-kills it with SIGKILL.</p>
+                  <pre><code>terminationGracePeriodSeconds: 30   # default is 30s; tune to your p99 latency</code></pre>
+
+                  <p><strong>Full safe rollout config:</strong></p>
+                  <pre><code>spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+      - name: app
+        image: myapp:v2
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sleep", "5"]
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          periodSeconds: 5</code></pre>
+
+                  <p>With this setup: new pod passes readiness → old pod gets preStop sleep → kube-proxy drains → SIGTERM sent → app finishes in-flight requests → SIGKILL only after grace period. Zero dropped requests.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                Which deployment strategy do you follow for Kubernetes, and when would you choose each?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  <p>Kubernetes supports several strategies. The right choice depends on your risk tolerance, traffic volume, and rollback speed requirements.</p>
+
+                  <p><strong>1. Rolling Update (Kubernetes default)</strong></p>
+                  <p>Gradually replaces old pods with new ones. Zero downtime. Controlled by <code>maxSurge</code> and <code>maxUnavailable</code>.</p>
+                  <pre><code>strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1        # one extra pod during rollout
+    maxUnavailable: 0  # never reduce below desired count</code></pre>
+                  <p><em>Use when:</em> standard production deployments where both versions can run simultaneously and the API is backward compatible.</p>
+
+                  <p><strong>2. Recreate</strong></p>
+                  <p>Terminates ALL old pods, then creates new ones. Causes downtime between versions.</p>
+                  <pre><code>strategy:
+  type: Recreate</code></pre>
+                  <p><em>Use when:</em> v1 and v2 cannot run simultaneously (e.g., exclusive database schema locks, singleton processes). Accept the brief downtime.</p>
+
+                  <p><strong>3. Blue-Green (outside Kubernetes core — via Services or Ingress)</strong></p>
+                  <p>Run v1 (blue) and v2 (green) simultaneously. Switch all traffic at once by updating the Service selector or Ingress rule. Zero downtime; instant rollback by switching back.</p>
+                  <pre><code># Switch Service from blue to green:
+kubectl patch service my-app \
+  -p '{"spec":{"selector":{"version":"green"}}}'</code></pre>
+                  <p><em>Use when:</em> you need instant cutover and fast rollback, and can afford double infrastructure cost during the switch.</p>
+
+                  <p><strong>4. Canary</strong></p>
+                  <p>Route a small percentage of traffic to the new version. Increase gradually if metrics look healthy. Typically implemented with two Deployments and weighted Ingress rules (NGINX, Istio, or Argo Rollouts).</p>
+                  <pre><code># With NGINX Ingress — send 10% to canary:
+annotations:
+  nginx.ingress.kubernetes.io/canary: "true"
+  nginx.ingress.kubernetes.io/canary-weight: "10"</code></pre>
+                  <p><em>Use when:</em> high-risk changes to critical services where you want to validate with real traffic before full rollout.</p>
+
+                  <p><strong>My default approach:</strong> Rolling Update with <code>maxUnavailable: 0</code> + readiness probes + <code>preStop</code> sleep for most services. Canary for high-risk releases. Blue-Green when I need instant rollback with no traffic mixing.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                How do you configure a pod to avoid certain nodes (e.g., during a node upgrade)? Walk through Taints &amp; Tolerations.
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  <p>Use <strong>Taints</strong> on nodes to repel pods, and <strong>Tolerations</strong> on pods to explicitly allow them onto tainted nodes. For node upgrades, combine this with <strong>PodDisruptionBudgets</strong> for graceful handling.</p>
+
+                  <p><strong>Taint a node</strong> (mark it as "off limits"):</p>
+                  <pre><code># Syntax: key=value:effect
+kubectl taint nodes node-1 upgrade=in-progress:NoSchedule
+
+# Three taint effects:
+# NoSchedule       — new pods won't be scheduled here (existing pods stay)
+# PreferNoSchedule — scheduler avoids this node but won't guarantee it
+# NoExecute        — new pods won't schedule AND existing pods are evicted</code></pre>
+
+                  <p><strong>During a node upgrade — use NoExecute to gracefully drain:</strong></p>
+                  <pre><code># This evicts all pods that don't tolerate it (respects PDBs):
+kubectl taint nodes node-1 upgrade=in-progress:NoExecute
+
+# Equivalent to:
+kubectl cordon node-1  # stop new scheduling
+kubectl drain node-1 --ignore-daemonsets --delete-emptydir-data</code></pre>
+
+                  <p><strong>Toleration on a pod</strong> (allow it to run on tainted nodes):</p>
+                  <pre><code>spec:
+  tolerations:
+  - key: "upgrade"
+    operator: "Equal"
+    value: "in-progress"
+    effect: "NoSchedule"    # must match the taint effect</code></pre>
+
+                  <p><strong>Common built-in taints you should know:</strong></p>
+                  <table>
+                    <thead><tr><th>Taint</th><th>When applied</th></tr></thead>
+                    <tbody>
+                      <tr><td><code>node.kubernetes.io/not-ready</code></td><td>Node is not healthy</td></tr>
+                      <tr><td><code>node.kubernetes.io/unreachable</code></td><td>Node controller can't reach the node</td></tr>
+                      <tr><td><code>node.kubernetes.io/disk-pressure</code></td><td>Disk is running low</td></tr>
+                      <tr><td><code>node.kubernetes.io/memory-pressure</code></td><td>Memory is running low</td></tr>
+                    </tbody>
+                  </table>
+
+                  <p><strong>PodDisruptionBudget (PDB)</strong> ensures the drain respects your availability requirements — even with NoExecute, K8s won't evict a pod if doing so would violate the PDB:</p>
+                  <pre><code>apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: app-pdb
+spec:
+  minAvailable: 2   # always keep at least 2 pods up during eviction
+  selector:
+    matchLabels:
+      app: my-app</code></pre>
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                My pod needs to talk to RDS — what's the right way to set it up?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  <p>Three things need to be right: <strong>networking</strong>, <strong>credentials</strong>, and <strong>connection management</strong>.</p>
+
+                  <p><strong>1. Networking — open the right security group</strong></p>
+                  <p>RDS must allow inbound traffic from your pods. The simplest and most common approach on EKS: allow the node group's security group to reach RDS on port 5432 (Postgres) or 3306 (MySQL).</p>
+                  <pre><code># Terraform: allow EKS nodes to reach RDS
+resource "aws_security_group_rule" "eks_to_rds" {
+  type                     = "ingress"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.rds.id
+  source_security_group_id = aws_security_group.eks_nodes.id
+}</code></pre>
+
+                  <p><strong>2. Credentials — never hardcode; use Secrets</strong></p>
+                  <p><em>Option A: Kubernetes Secret (simple, acceptable for non-production)</em></p>
+                  <pre><code>kubectl create secret generic rds-creds \
+  --from-literal=DB_HOST=mydb.xxxxx.us-east-1.rds.amazonaws.com \
+  --from-literal=DB_USER=app \
+  --from-literal=DB_PASSWORD=supersecret</code></pre>
+                  <pre><code># Inject into pod as env vars:
+envFrom:
+- secretRef:
+    name: rds-creds</code></pre>
+
+                  <p><em>Option B: AWS Secrets Manager + Secrets Store CSI Driver (recommended for production)</em></p>
+                  <p>Store credentials in Secrets Manager, mount them as files or env vars at pod startup — no secret stored in etcd.</p>
+                  <pre><code>volumes:
+- name: rds-secret
+  csi:
+    driver: secrets-store.csi.k8s.io
+    readOnly: true
+    volumeAttributes:
+      secretProviderClass: rds-credentials</code></pre>
+
+                  <p><em>Option C: IAM authentication for RDS (most secure, passwordless)</em></p>
+                  <p>Enable IAM DB authentication on the RDS instance, use IRSA (IAM Roles for Service Accounts) to give the pod an IAM role, and generate a short-lived token at connection time instead of using a password.</p>
+                  <pre><code># IRSA annotation on service account:
+annotations:
+  eks.amazonaws.com/role-arn: arn:aws:iam::123456789:role/app-rds-role</code></pre>
+
+                  <p><strong>3. Connection management</strong></p>
+                  <ul>
+                    <li>Always use a connection pool (PgBouncer, HikariCP) — RDS has per-instance connection limits</li>
+                    <li>Connect to the <strong>RDS endpoint hostname</strong>, not IP — it changes on failover</li>
+                    <li>Enable SSL: <code>sslmode=require</code> (Postgres) or <code>requireSSL=true</code> (MySQL)</li>
+                    <li>Use the <strong>reader endpoint</strong> for read replicas to offload read traffic</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                You update a ConfigMap param via Helm. How does the new value reflect in the pod — with zero downtime in production?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  <p>This depends on <em>how</em> the ConfigMap is consumed. The behaviour is different for env vars vs volume mounts.</p>
+
+                  <p><strong>Env vars (<code>envFrom</code> / <code>env.valueFrom</code>) — do NOT auto-update</strong></p>
+                  <p>Environment variables are set at container start time and <strong>never change while the pod is running</strong>, even if the ConfigMap changes. The pod must be restarted to pick up the new value.</p>
+
+                  <p><strong>Volume mounts — DO auto-update (eventually)</strong></p>
+                  <p>When a ConfigMap is mounted as a file, the kubelet syncs changes roughly every 60 seconds. The file on disk gets updated without a pod restart. This works if your application watches the file for changes (e.g., Nginx, many config-aware apps).</p>
+
+                  <p><strong>The Helm trick for zero-downtime rolling restart on ConfigMap change</strong></p>
+                  <p>Helm can't detect that a ConfigMap changed and trigger a rolling update on its own — unless you add a checksum annotation to the Deployment pod template. When the ConfigMap content changes, the SHA256 changes, the pod template hash changes, and Kubernetes performs a rolling update automatically:</p>
+                  <pre><code># In your Helm chart — templates/deployment.yaml:
+spec:
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+</code></pre>
+                  <p>Now <code>helm upgrade</code> on a ConfigMap change will trigger a zero-downtime rolling restart of the Deployment using the normal Rolling Update strategy (maxSurge, maxUnavailable, readiness probes).</p>
+
+                  <p><strong>Alternative: use <code>kubectl rollout restart</code> in your CI pipeline</strong></p>
+                  <pre><code>helm upgrade my-app ./chart --values prod-values.yaml
+kubectl rollout restart deployment/my-app</code></pre>
+
+                  <p><strong>Best practice for production:</strong> use the <code>checksum/config</code> annotation so restarts are tied to actual config changes, not manual steps — and always pair with <code>maxUnavailable: 0</code> and readiness probes to guarantee zero dropped requests during the restart.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                How do you ensure pods in a Deployment are scheduled on different nodes?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  <p>By default Kubernetes may schedule multiple pods from the same Deployment on the same node. There are two ways to prevent this.</p>
+
+                  <p><strong>Option 1 — Pod Anti-Affinity (classic approach)</strong></p>
+                  <p>Use <code>podAntiAffinity</code> to tell the scheduler "don't place me on a node that already has a pod with this label."</p>
+                  <pre><code>spec:
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:  # hard rule
+          - labelSelector:
+              matchLabels:
+                app: my-app
+            topologyKey: "kubernetes.io/hostname"  # one pod per node</code></pre>
+                  <p>Use <code>preferredDuringSchedulingIgnoredDuringExecution</code> instead for a soft preference — useful when you have more replicas than nodes and don't want scheduling to fail.</p>
+
+                  <p><strong>Option 2 — TopologySpreadConstraints (recommended, more flexible)</strong></p>
+                  <p>Introduced in Kubernetes 1.18, this gives fine-grained control over how pods are distributed across nodes, zones, or any topology key.</p>
+                  <pre><code>spec:
+  template:
+    spec:
+      topologySpreadConstraints:
+      - maxSkew: 1                          # max difference in pod count between nodes
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule    # hard: fail if can't spread
+        labelSelector:
+          matchLabels:
+            app: my-app</code></pre>
+                  <p><code>maxSkew: 1</code> means the busiest node can have at most 1 more pod than the least busy. Set <code>whenUnsatisfiable: ScheduleAnyway</code> for a best-effort spread without blocking scheduling.</p>
+
+                  <p><strong>Which to use?</strong> Prefer <code>topologySpreadConstraints</code> — it's more expressive, handles multi-zone spreading, and is the Kubernetes-recommended approach going forward. Use anti-affinity when you need strict "exactly one pod per node" guarantees.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
                 What is a Namespace in Kubernetes?
                 <span class="qa-chevron">▼</span>
               </button>
@@ -178,6 +485,68 @@ spec:
                   projects, or environments. Resources in different namespaces are isolated by default. You can apply
                   <code>ResourceQuotas</code> and <code>LimitRanges</code> per namespace. Common defaults are
                   <code>default</code>, <code>kube-system</code>, and <code>kube-public</code>.
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                How do you upgrade an EKS cluster without taking down production?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  <p>EKS upgrades happen in two stages: <strong>control plane</strong> then <strong>data plane</strong>. Both can be done with zero downtime if you follow the right order.</p>
+
+                  <p><strong>Stage 1 — Upgrade the control plane (API server, etcd, scheduler)</strong></p>
+                  <p>This is fully managed by AWS and takes ~10 minutes. The API server may be briefly unavailable during the upgrade but running pods are unaffected — the data plane keeps serving traffic independently.</p>
+                  <pre><code># Via AWS Console, CLI, or Terraform:
+aws eks update-cluster-version \
+  --name my-cluster \
+  --kubernetes-version 1.30
+
+# Watch progress:
+aws eks describe-update --name my-cluster --update-id &lt;id&gt;</code></pre>
+
+                  <p><strong>Stage 2 — Upgrade add-ons to match new control plane version</strong></p>
+                  <p>Before touching nodes, update managed add-ons: <code>kube-proxy</code>, <code>CoreDNS</code>, <code>vpc-cni</code>. Version mismatches can cause networking issues.</p>
+                  <pre><code>aws eks update-addon \
+  --cluster-name my-cluster \
+  --addon-name kube-proxy \
+  --addon-version v1.30.0-eksbuild.3</code></pre>
+
+                  <p><strong>Stage 3 — Set PodDisruptionBudgets before touching nodes</strong></p>
+                  <p>PDBs prevent the node drainer from evicting too many pods at once, ensuring your service stays available during the node replacement:</p>
+                  <pre><code>apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: app-pdb
+spec:
+  minAvailable: 2       # always keep at least 2 pods running
+  selector:
+    matchLabels:
+      app: my-app</code></pre>
+
+                  <p><strong>Stage 4 — Roll node groups one at a time</strong></p>
+                  <p>For managed node groups, trigger a rolling update. EKS drains each node (respecting PDBs), terminates it, launches a replacement, and waits for it to be Ready before moving to the next.</p>
+                  <pre><code># Managed node group — rolling update:
+aws eks update-nodegroup-version \
+  --cluster-name my-cluster \
+  --nodegroup-name workers \
+  --kubernetes-version 1.30
+
+# Self-managed nodes — cordon + drain manually:
+kubectl cordon node-1
+kubectl drain node-1 --ignore-daemonsets --delete-emptydir-data</code></pre>
+
+                  <p><strong>Key rules:</strong></p>
+                  <ul>
+                    <li>Always upgrade control plane before nodes</li>
+                    <li>Only skip one minor version at a time (1.28 → 1.29 → 1.30)</li>
+                    <li>Upgrade add-ons before nodes, not after</li>
+                    <li>PDBs are your safety net — set them before starting</li>
+                    <li>Test the upgrade in staging on the same minor version first</li>
+                  </ul>
                 </div>
               </div>
             </div>
@@ -235,6 +604,117 @@ spec:
       claimName: shared-pvc   # ← same PVC name in pod-b too</code></pre>
 
                   <p>Any number of pods — across different nodes — referencing the same <code>claimName</code> will all read and write to the same underlying storage. Use <strong>Amazon EFS</strong> on AWS or <strong>Azure Files</strong> on Azure for fully managed RWX storage without running your own NFS server.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                After enabling the ALB Ingress Controller in EKS, will each Ingress resource create a separate ALB, or can multiple Ingresses share one?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  <p><strong>By default — one ALB per Ingress.</strong> Each Ingress resource the AWS Load Balancer Controller (formerly ALB Ingress Controller) sees gets its own ALB. For large clusters with many services this gets expensive quickly.</p>
+
+                  <p><strong>With IngressGroup — multiple Ingresses share one ALB.</strong> Add the same <code>group.name</code> annotation to all Ingresses you want to merge:</p>
+                  <pre><code># service-a ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: service-a-ingress
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/group.name: shared-alb    # ← group key
+    alb.ingress.kubernetes.io/group.order: "10"         # rule priority
+spec:
+  rules:
+  - host: api.example.com
+    http:
+      paths:
+      - path: /users
+        pathType: Prefix
+        backend:
+          service:
+            name: service-a
+            port:
+              number: 80</code></pre>
+                  <pre><code># service-b ingress — same group.name
+metadata:
+  name: service-b-ingress
+  annotations:
+    alb.ingress.kubernetes.io/group.name: shared-alb
+    alb.ingress.kubernetes.io/group.order: "20"
+spec:
+  rules:
+  - host: api.example.com
+    http:
+      paths:
+      - path: /orders
+        pathType: Prefix
+        backend:
+          service:
+            name: service-b
+            port:
+              number: 80</code></pre>
+
+                  <p>The controller merges listener rules from all Ingresses in the group onto a single ALB. <code>group.order</code> controls which rules take priority when paths overlap (lower number = higher priority).</p>
+
+                  <p><strong>Things to be aware of:</strong></p>
+                  <ul>
+                    <li>All services in a group share the same ALB security group — WAF rules, access logs, and SSL cert settings apply to all</li>
+                    <li>Deleting one Ingress only removes its rules from the shared ALB — the ALB itself stays up</li>
+                    <li>The ALB is only deleted when the last Ingress in the group is deleted</li>
+                    <li>Use IngressGroup when services are in the same security domain; use separate ALBs to isolate them</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                My pods keep restarting frequently — how do you debug this?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  <p>High restart counts usually mean one of four things: OOMKilled, app crash on startup, liveness probe failure, or a missing config/secret. Here's the debugging sequence:</p>
+
+                  <p><strong>Step 1 — Check restart count and current status</strong></p>
+                  <pre><code>kubectl get pods -n &lt;namespace&gt;
+# Look at RESTARTS column and STATUS
+# CrashLoopBackOff = container keeps dying and K8s is backing off retries</code></pre>
+
+                  <p><strong>Step 2 — Read the last container state</strong></p>
+                  <pre><code>kubectl describe pod &lt;pod-name&gt; -n &lt;namespace&gt;
+# Key fields to look at:
+#   Last State: Terminated
+#   Reason: OOMKilled / Error / Completed
+#   Exit Code: 137 / 1 / 0
+#   Events section at the bottom</code></pre>
+
+                  <p><strong>Step 3 — Read logs from the crashed container</strong></p>
+                  <pre><code>kubectl logs &lt;pod-name&gt; --previous   # logs from the container that just died
+kubectl logs &lt;pod-name&gt; -f           # live logs from current container</code></pre>
+
+                  <p><strong>Decode the Exit Code:</strong></p>
+                  <table>
+                    <thead><tr><th>Exit Code</th><th>Meaning</th><th>Fix</th></tr></thead>
+                    <tbody>
+                      <tr><td><code>137</code></td><td>OOMKilled — container exceeded memory limit</td><td>Increase <code>resources.limits.memory</code> or fix memory leak</td></tr>
+                      <tr><td><code>1</code></td><td>App crashed — unhandled error on startup</td><td>Check <code>--previous</code> logs for stack trace</td></tr>
+                      <tr><td><code>0</code></td><td>Clean exit — app exited itself</td><td>App shouldn't exit in a pod; check entrypoint</td></tr>
+                      <tr><td><code>143</code></td><td>SIGTERM received — liveness probe killed it</td><td>Tune probe <code>failureThreshold</code> and <code>periodSeconds</code></td></tr>
+                    </tbody>
+                  </table>
+
+                  <p><strong>Common causes and fixes:</strong></p>
+                  <ul>
+                    <li><strong>OOMKilled</strong> — container hit memory limit. Check actual usage: <code>kubectl top pod &lt;name&gt;</code>, then raise the limit or profile for leaks</li>
+                    <li><strong>CrashLoopBackOff</strong> — app fails immediately on start. Usually a bad env var, missing secret mount, or startup bug. Check <code>--previous</code> logs</li>
+                    <li><strong>Liveness probe too aggressive</strong> — probe fires before app is ready. Increase <code>initialDelaySeconds</code> or <code>failureThreshold</code></li>
+                    <li><strong>Missing ConfigMap/Secret</strong> — pod can't mount volume. Check <code>describe pod</code> Events for <em>MountVolume failed</em></li>
+                  </ul>
                 </div>
               </div>
             </div>
@@ -396,6 +876,127 @@ spec:
               </div>
             </div>
 
+            <div class="qa-item">
+              <button class="qa-question">
+                ECS Task vs ECS Service — what's the actual difference?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  <p>An ECS <strong>Task</strong> is a single running instance of a task definition — think of it as one <code>docker run</code>. It runs, does its job, and stops. ECS doesn't restart it automatically.</p>
+                  <p>An ECS <strong>Service</strong> is a long-running controller that ensures a desired number of Tasks are always running. If a Task crashes, the Service replaces it. It integrates with ALB/NLB for load balancing and handles rolling deployments.</p>
+
+                  <table>
+                    <thead><tr><th>Feature</th><th>ECS Task (standalone)</th><th>ECS Service</th></tr></thead>
+                    <tbody>
+                      <tr><td>Lifecycle</td><td>Runs once, then stops</td><td>Always keeps N tasks running</td></tr>
+                      <tr><td>Auto-restart on failure</td><td>No</td><td>Yes</td></tr>
+                      <tr><td>Load balancer integration</td><td>No</td><td>Yes (ALB/NLB)</td></tr>
+                      <tr><td>Rolling deployments</td><td>No</td><td>Yes</td></tr>
+                      <tr><td>Use case</td><td>Batch jobs, DB migrations, cron (via EventBridge)</td><td>Web APIs, background workers, long-running apps</td></tr>
+                    </tbody>
+                  </table>
+
+                  <p>The Kubernetes analogy: a standalone ECS Task ≈ a Kubernetes <code>Job</code>; an ECS Service ≈ a Kubernetes <code>Deployment</code>.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                What is the difference between an ECS Task Execution Role and a Task Role?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  <p>These are two distinct IAM roles that serve completely different purposes and are a common source of confusion.</p>
+
+                  <p><strong>Task Execution Role</strong> — used by the <em>ECS agent (infrastructure)</em>, not your application code:</p>
+                  <ul>
+                    <li>Pull container images from ECR</li>
+                    <li>Write container logs to CloudWatch Logs</li>
+                    <li>Retrieve secrets from AWS Secrets Manager or SSM Parameter Store to inject as environment variables</li>
+                  </ul>
+                  <pre><code># Typical execution role policy:
+{
+  "Effect": "Allow",
+  "Action": [
+    "ecr:GetAuthorizationToken",
+    "ecr:BatchPullImage",
+    "logs:CreateLogStream",
+    "logs:PutLogEvents",
+    "secretsmanager:GetSecretValue"
+  ],
+  "Resource": "*"
+}</code></pre>
+
+                  <p><strong>Task Role</strong> — used by your <em>application code</em> running inside the container:</p>
+                  <ul>
+                    <li>Read/write S3 buckets</li>
+                    <li>Query DynamoDB tables</li>
+                    <li>Send messages to SQS/SNS</li>
+                    <li>Any AWS SDK calls your app makes at runtime</li>
+                  </ul>
+                  <pre><code># Typical task role policy (least-privilege example):
+{
+  "Effect": "Allow",
+  "Action": ["s3:GetObject", "s3:PutObject"],
+  "Resource": "arn:aws:s3:::my-app-bucket/*"
+}</code></pre>
+
+                  <p><strong>Memory aid:</strong> Execution Role = "ECS needs this to <em>run</em> your container." Task Role = "Your app needs this to <em>do its job</em>."</p>
+                  <p>A common mistake is putting application permissions in the Execution Role — they end up in the same place but semantically they're wrong, and it violates least-privilege. Always split them.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                What are Node Groups in EKS?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  <p>Node Groups are the managed compute resources (EC2 instances) that run your containerized workloads in EKS. They are groups of identical EC2 worker nodes managed together as a unit.</p>
+
+                  <p>EKS offers two types:</p>
+
+                  <p><strong>Managed Node Groups (recommended)</strong></p>
+                  <ul>
+                    <li>AWS provisions, registers, and manages the EC2 instances for you</li>
+                    <li>Automatic, graceful node replacements during upgrades (drains pods, respects PDBs)</li>
+                    <li>Integrated with EC2 Auto Scaling Groups under the hood</li>
+                    <li>Nodes automatically register with the cluster — no bootstrap scripts needed</li>
+                  </ul>
+                  <pre><code># Terraform example:
+resource "aws_eks_node_group" "workers" {
+  cluster_name    = aws_eks_cluster.main.name
+  node_group_name = "workers"
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = var.private_subnet_ids
+
+  instance_types = ["m5.large"]
+  scaling_config {
+    desired_size = 3
+    min_size     = 2
+    max_size     = 10
+  }
+}</code></pre>
+
+                  <p><strong>Self-Managed Node Groups</strong></p>
+                  <ul>
+                    <li>You manage the EC2 instances, Auto Scaling Groups, and bootstrap configuration yourself</li>
+                    <li>More control (custom AMIs, custom kubelet flags) but more operational overhead</li>
+                    <li>Use when you need a specific OS, GPU instances, or non-standard configurations</li>
+                  </ul>
+
+                  <p><strong>Fargate (no node groups)</strong> — serverless option where AWS runs pods directly without you managing EC2 nodes at all. No visibility into the underlying instance.</p>
+
+                  <p><strong>Common pattern:</strong> Use multiple node groups with different instance types — a general-purpose group for standard workloads and a GPU or memory-optimized group for specific jobs, controlled via node selectors or taints.</p>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -460,6 +1061,156 @@ spec:
                   For example, you can use <code>data "aws_ami"</code> to look up the latest Amazon Linux AMI ID without
                   hardcoding it, or <code>data "aws_vpc"</code> to reference a VPC created outside your Terraform config.
                   Data sources are declared with the <code>data</code> block and referenced as <code>data.type.name.attribute</code>.
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                We have an EKS cluster in us-east-1 managed by a Terraform module. We're upgrading the module and also deploying a new cluster in us-east-2. How do we avoid downtime, unintended resource recreation, or config drift on the existing cluster?
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  <p>This is a two-part problem: safely introducing a new cluster (us-east-2) and safely upgrading an existing one (us-east-1). The risks on the existing cluster are resource recreation, accidental destroy, and state drift. Here's how to handle each.</p>
+
+                  <p><strong>1. Use separate state per cluster — never share state between regions</strong></p>
+                  <p>Each cluster should have its own Terraform state file, either via <strong>workspaces</strong> or separate root module directories. This ensures changes to one cluster can never accidentally affect the other.</p>
+                  <pre><code># Option A: separate directories
+infra/
+  eks-us-east-1/   # existing cluster
+    main.tf
+    backend.tf     # S3 key: eks/us-east-1/terraform.tfstate
+  eks-us-east-2/   # new cluster
+    main.tf
+    backend.tf     # S3 key: eks/us-east-2/terraform.tfstate</code></pre>
+
+                  <p><strong>2. Deploy us-east-2 first — it's greenfield, no risk</strong></p>
+                  <p>Apply the new module version to us-east-2 fresh. This validates the new module works correctly before you touch production.</p>
+                  <pre><code>cd infra/eks-us-east-2
+terraform init
+terraform plan   # review, then:
+terraform apply</code></pre>
+
+                  <p><strong>3. Before upgrading us-east-1 — run <code>terraform plan</code> and read it carefully</strong></p>
+                  <p>Module upgrades often rename resources or change argument defaults. <code>plan</code> will reveal any destructive changes. Watch for these warning signs:</p>
+                  <pre><code># DANGEROUS — this will destroy your cluster:
+- aws_eks_cluster.main  # forces replacement
+
+# SAFE — in-place update:
+~ aws_eks_cluster.main
+    version: "1.28" -> "1.29"</code></pre>
+
+                  <p><strong>4. Handle resource renames with <code>terraform state mv</code></strong></p>
+                  <p>If the new module version renames a resource internally (e.g. <code>aws_eks_cluster.eks</code> → <code>aws_eks_cluster.main</code>), Terraform sees a destroy + create. Fix this by moving the resource in state — no real-world change happens:</p>
+                  <pre><code>terraform state mv \
+  module.eks.aws_eks_cluster.eks \
+  module.eks.aws_eks_cluster.main</code></pre>
+                  <p>Re-run <code>terraform plan</code> — the dangerous destroy should disappear.</p>
+
+                  <p><strong>5. Apply us-east-1 changes incrementally using <code>-target</code></strong></p>
+                  <p>For high-risk upgrades, apply one resource at a time rather than everything at once:</p>
+                  <pre><code>terraform apply -target=module.eks.aws_eks_node_group.workers</code></pre>
+
+                  <p><strong>6. Pin module versions explicitly</strong></p>
+                  <p>Never use an unpinned module source. This prevents unintended upgrades in CI:</p>
+                  <pre><code>module "eks" {
+  source  = "terraform-aws-modules/eks/aws"
+  version = "~> 20.0"   # ← always pin; review changelog before bumping
+}</code></pre>
+
+                  <p><strong>7. Check the module's CHANGELOG for breaking changes</strong></p>
+                  <p>Before upgrading, read the module's release notes. Major version bumps (v19 → v20) typically have a migration guide listing required <code>state mv</code> operations and removed variables.</p>
+
+                  <p><strong>Summary checklist:</strong></p>
+                  <ul>
+                    <li>Separate state per cluster/region</li>
+                    <li>Deploy us-east-2 first to validate new module</li>
+                    <li>Run <code>terraform plan</code> on us-east-1 — look for <em>forces replacement</em></li>
+                    <li>Use <code>terraform state mv</code> to resolve renames without recreation</li>
+                    <li>Apply incrementally with <code>-target</code> for risky resources</li>
+                    <li>Pin module versions; read CHANGELOG before bumping</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- General DevOps -->
+        <div class="interview-category">
+          <h2><span class="badge interview">⚙ General DevOps</span></h2>
+          <div class="qa-list">
+
+            <div class="qa-item">
+              <button class="qa-question">
+                As a Senior DevOps Engineer, walk me through the end-to-end DevOps pipeline you would design for a project.
+                <span class="qa-chevron">▼</span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  <p>A production-grade pipeline has seven stages. Here's how I'd design each one:</p>
+
+                  <p><strong>1. Source Control (Git)</strong></p>
+                  <p>All code — application, IaC, Helm charts, Dockerfiles — lives in Git (GitHub/GitLab). Branch strategy: <code>main</code> = production, <code>staging</code>, short-lived feature branches. PRs require at least one review + passing CI before merge.</p>
+
+                  <p><strong>2. CI — Build, Test &amp; Code Quality</strong></p>
+                  <p>Triggered on every PR and push. Runs in parallel:</p>
+                  <ul>
+                    <li>Unit tests + integration tests</li>
+                    <li>Static code analysis (SonarQube, ESLint)</li>
+                    <li>Dependency vulnerability scan (Dependabot, Snyk)</li>
+                    <li>Docker image build</li>
+                    <li>Container security scan (Trivy) — fail pipeline on HIGH/CRITICAL CVEs</li>
+                  </ul>
+                  <pre><code># GitHub Actions example:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - run: npm test
+    - run: docker build -t myapp:${{ github.sha }} .
+    - run: trivy image --exit-code 1 --severity HIGH,CRITICAL myapp:${{ github.sha }}</code></pre>
+
+                  <p><strong>3. Artifact Registry</strong></p>
+                  <p>Push the verified image to ECR (or Docker Hub) tagged with the Git SHA — never <code>:latest</code> in production. Immutable tags mean you always know exactly what's running.</p>
+                  <pre><code>docker tag myapp:$SHA $ECR_REPO:$SHA
+docker push $ECR_REPO:$SHA</code></pre>
+
+                  <p><strong>4. Infrastructure as Code (Terraform)</strong></p>
+                  <p>Separate pipeline for infra changes. <code>terraform plan</code> runs on every PR (output posted as a PR comment). <code>terraform apply</code> runs only after merge to main, with remote state in S3 + DynamoDB locking.</p>
+
+                  <p><strong>5. CD — Deploy to Kubernetes via Helm/Argo CD</strong></p>
+                  <p>Two approaches:</p>
+                  <ul>
+                    <li><em>Push-based (CI-driven):</em> CI pipeline runs <code>helm upgrade</code> directly after image push</li>
+                    <li><em>Pull-based / GitOps (recommended):</em> Argo CD or Flux watches the Git repo for changes to Helm values (image tag) and syncs the cluster automatically</li>
+                  </ul>
+                  <p>Promotion order: <strong>Dev → Staging → Production</strong>. Production requires a manual approval gate.</p>
+                  <pre><code># GitOps: update image tag in values file, commit, Argo CD picks it up
+image:
+  repository: 123456789.dkr.ecr.us-east-1.amazonaws.com/myapp
+  tag: "a3f9c21"   # ← updated by CI after image push</code></pre>
+
+                  <p><strong>6. Observability</strong></p>
+                  <ul>
+                    <li><strong>Metrics:</strong> Prometheus + Grafana (dashboards for latency, error rate, saturation)</li>
+                    <li><strong>Logs:</strong> FluentBit → CloudWatch Logs / Elasticsearch</li>
+                    <li><strong>Traces:</strong> AWS X-Ray or OpenTelemetry</li>
+                    <li><strong>Alerts:</strong> PagerDuty / Slack for SLO breaches (error rate &gt; 1%, p99 latency &gt; 500ms)</li>
+                  </ul>
+
+                  <p><strong>7. Rollback strategy</strong></p>
+                  <p>Every deploy is a Helm release — rollback is a one-liner: <code>helm rollback my-app 3</code>. With Argo CD/GitOps, rollback = revert the Git commit and the cluster self-heals.</p>
+
+                  <p><strong>Summary diagram:</strong></p>
+                  <pre><code>Developer → Git PR → CI (test + build + scan) → ECR (image push)
+     ↓
+Argo CD detects new image tag → Rolling deploy to Dev
+     ↓ (auto-promote if tests pass)
+Staging → Manual approval gate → Production</code></pre>
                 </div>
               </div>
             </div>
