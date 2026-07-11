@@ -531,7 +531,6 @@ ul, ol { list-style: none; }
 .qa-question {
   width: 100%;
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
   background: none;
@@ -546,6 +545,13 @@ ul, ol { list-style: none; }
   transition: color var(--transition);
 }
 .qa-question:hover { color: var(--accent); }
+.q-text { flex: 1; }
+.q-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
 
 .qa-chevron {
   font-size: 0.75rem;
