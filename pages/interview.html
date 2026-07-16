@@ -33,7 +33,7 @@
       <h1>Interview Prep</h1>
       <p>Curated Q&amp;A for DevOps, Kubernetes, Docker, AWS, Terraform, and CI/CD interviews.</p>
       <div class="page-stats">
-        <span>34 Questions</span>
+        <span>35 Questions</span>
         <span>6 Topics</span>
         <span>Updated July 2026</span>
       </div>
@@ -1354,6 +1354,57 @@ jobs:
                   </ul>
 
                   <p><strong>Result:</strong> the 15 near-identical pipelines collapse into one source of truth plus 15 ten-line callers. A pipeline change is a single PR to <code>ci-workflows</code>, tested, tagged, then rolled out by bumping the ref — exactly the DRY, auditable setup you want at scale.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="qa-item">
+              <button class="qa-question">
+                <span class="q-text">Follow-up: our <code>org/ci-workflows</code> repo is private. By default other private repos can't call its reusable workflows and get a "workflow not found" error. How do you configure it?</span>
+                <span class="q-meta">
+                  <span class="badge cicd">CI/CD</span>
+                  <span class="qa-chevron">▼</span>
+                </span>
+              </button>
+              <div class="qa-answer">
+                <div class="qa-answer-inner">
+                  <p>This trips up a lot of teams. A reusable workflow in a <strong>private</strong> repo is not shareable by default — GitHub blocks other repos from referencing it until you explicitly grant access. There's a single setting that fixes it, plus a few related gotchas.</p>
+
+                  <p><strong>1. Grant Actions access on the source repo (the fix)</strong></p>
+                  <p>On the <code>org/ci-workflows</code> repo, go to <strong>Settings → Actions → General → Access</strong> and set the access policy. The relevant option is:</p>
+                  <ul>
+                    <li><strong>"Accessible from repositories in the '&lt;org&gt;' organization"</strong> — lets any repo in your org call this repo's workflows and actions. This is the one you almost always want for a shared <code>ci-workflows</code> repo.</li>
+                    <li>"Not accessible" (default) — only this repo itself can use its workflows.</li>
+                    <li>"Accessible from repositories owned by the user/enterprise" — broader, for cross-org sharing on Enterprise.</li>
+                  </ul>
+                  <p>You can also automate this via the REST API instead of clicking through the UI:</p>
+                  <pre><code>gh api -X PUT \
+  /repos/my-org/ci-workflows/actions/permissions/access \
+  -f access_level=organization</code></pre>
+                  <p>Once set, the existing <code>uses: my-org/ci-workflows/.github/workflows/build-deploy.yml@v1</code> reference just works — no change needed in the callers.</p>
+
+                  <p><strong>2. Make sure the caller repo is allowed to run those actions</strong></p>
+                  <p>The other half is the <em>consumer</em> side. On each calling repo (or org-wide under <strong>Organization Settings → Actions → Policies</strong>), the allowed-actions policy must permit the workflows/actions you're pulling in. For an internal shared repo, "Allow &lt;org&gt;, and select non-&lt;org&gt;, actions" with the org's own actions enabled covers it.</p>
+
+                  <p><strong>3. Checkout of private code inside the workflow needs a token</strong></p>
+                  <p>Granting Actions access lets a repo <em>call</em> the workflow, but if that reusable workflow (or a step in it) needs to <code>checkout</code> a <em>different</em> private repo, the default <code>GITHUB_TOKEN</code> is scoped only to the caller repo. For that you need broader credentials:</p>
+                  <pre><code>      - uses: actions/checkout@v4
+        with:
+          repository: my-org/shared-helm-charts
+          token: ${{ secrets.ORG_PAT }}   # PAT or GitHub App token
+                                          # with repo:read on the target</code></pre>
+                  <p>Prefer a <strong>GitHub App installation token</strong> or a fine-grained PAT over a classic PAT, and store it as an org-level secret so you rotate it in one place.</p>
+
+                  <p><strong>4. Common "workflow not found" causes to rule out</strong></p>
+                  <ul>
+                    <li>Access policy still on "Not accessible" (step 1) — the #1 cause.</li>
+                    <li>Wrong ref — the tag/branch/SHA in <code>@v1</code> doesn't exist in <code>ci-workflows</code>.</li>
+                    <li>Path typo — it must be the full <code>.github/workflows/&lt;file&gt;.yml</code> path, not just the filename.</li>
+                    <li>The reusable workflow file isn't on the default branch <em>and</em> you referenced it by a ref that predates it.</li>
+                    <li>SSO not authorized on the PAT (if using one) for the org.</li>
+                  </ul>
+
+                  <p><strong>Summary:</strong> flip the source repo's Actions <strong>Access</strong> policy to organization-scoped (one setting or one API call), confirm the caller's allowed-actions policy permits it, and use an App/PAT token only if the workflow additionally checks out other private repos.</p>
                 </div>
               </div>
             </div>
